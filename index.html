@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lava-Louças da Revolução 💗</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2b2d42;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #ff70a6;
+            margin: 5px 0;
+            text-shadow: 2px 2px #d62828;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #a8dadc;
+        }
+
+        /* Área do Jogo / Pia */
+        #sink-area {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #8d99ae, #edf2f4);
+            border: 12px solid #4a4e69;
+            border-radius: 20px;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4), 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: none; /* Esconde o cursor padrão */
+            overflow: hidden;
+        }
+
+        /* O Prato */
+        #plate {
+            position: relative;
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, #ffffff 60%, #e0e0e0 100%);
+            border-radius: 50%;
+            border: 6px solid #d4d4d4;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Sujeira no Prato */
+        #dirt-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 69, 19, 0.85) 0%, rgba(85, 107, 47, 0.85) 70%);
+            transition: opacity 0.1s ease;
+        }
+
+        /* A Luva Rosa (Cursor Customizado) */
+        #pink-glove {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            pointer-events: none; /* Permite clicar através do elemento */
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+        }
+
+        /* Estilo da Luva com o Símbolo Feminista */
+        .glove-icon {
+            position: relative;
+            display: inline-block;
+        }
+
+        .glove-icon::after {
+            content: '♀';
+            position: absolute;
+            top: 15px;
+            left: 18px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* Painel de Pontuação e Mensagens */
+        #ui {
+            margin-top: 15px;
+            text-align: center;
+            width: 400px;
+        }
+
+        .score-board {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ff70a6;
+            margin-bottom: 5px;
+        }
+
+        #message-box {
+            min-height: 48px;
+            background-color: #3d405b;
+            border-radius: 8px;
+            padding: 10px;
+            font-style: italic;
+            color: #f4a261;
+            border: 1px solid #e76f51;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .instruction {
+            font-size: 0.8rem;
+            margin-top: 8px;
+            color: #8d99ae;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Lava-Louças da Revolução ♀</h1>
+        <div class="subtitle">Limpando os pratos e desconstruindo o patriarcado!</div>
+    </header>
+
+    <div id="sink-area">
+        <div id="plate">
+            <div id="dirt-layer"></div>
+        </div>
+        <div id="pink-glove">
+            <span class="glove-icon">🧤</span>
+        </div>
+    </div>
+
+    <div id="ui">
+        <div class="score-board">Pratos Limpos: <span id="clean-count">0</span></div>
+        <div id="message-box">Passe a luva rosa sobre a sujeira para esfregar o prato!</div>
+        <div class="instruction">Mova o mouse rapidamente sobre o prato para limpá-lo.</div>
+    </div>
+
+    <script>
+        const sinkArea = document.getElementById('sink-area');
+        const pinkGlove = document.getElementById('pink-glove');
+        const dirtLayer = document.getElementById('dirt-layer');
+        const cleanCountEl = document.getElementById('clean-count');
+        const messageBox = document.getElementById('message-box');
+
+        let dirtHealth = 100;
+        let cleanPlates = 0;
+        let isCleaning = false;
+
+        // Mensagens inspiradoras acionadas ao limpar pratos
+        const messages = [
+            "Louça limpa! Trabalho doméstico também deve ser dividido igualmente!",
+            "Outro prato brilhando! Lugar de mulher é onde ela quiser!",
+            "Mais um! O trabalho invisível precisa ser reconhecido!",
+            "Brilhando! Desconstruindo papéis ultrapassados de gênero a cada esfregada!",
+            "Perfeito! Nenhuma louça vai segurar o avanço da igualdade!"
+        ];
+
+        // Seguir o movimento do mouse na área da pia
+        sinkArea.addEventListener('mousemove', (e) => {
+            const rect = sinkArea.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            pinkGlove.style.left = `${x}px`;
+            pinkGlove.style.top = `${y}px`;
+
+            // Checar se o mouse está sobre o prato
+            const plate = document.getElementById('plate');
+            const plateRect = plate.getBoundingClientRect();
+
+            if (
+                e.clientX >= plateRect.left &&
+                e.clientX <= plateRect.right &&
+                e.clientY >= plateRect.top &&
+                e.clientY <= plateRect.bottom
+            ) {
+                scrub();
+            }
+        });
+
+        // Mecânica de esfregar
+        function scrub() {
+            if (dirtHealth > 0) {
+                // Reduz a "vida" da sujeira a cada movimento do mouse
+                dirtHealth -= 1.5;
+                dirtLayer.style.opacity = dirtHealth / 100;
+
+                if (dirtHealth <= 0) {
+                    plateCleaned();
+                }
+            }
+        }
+
+        // Função chamada quando o prato fica totalmente limpo
+        function plateCleaned() {
+            cleanPlates++;
+            cleanCountEl.innerText = cleanPlates;
+
+            // Seleciona uma mensagem aleatória
+            const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+            messageBox.innerText = randomMsg;
+
+            // Transição para um novo prato sujo
+            setTimeout(() => {
+                resetPlate();
+            }, 600);
+        }
+
+        // Reseta o prato para a próxima rodada
+        function resetPlate() {
+            dirtHealth = 100;
+            dirtLayer.style.opacity = 1;
+            
+            // Muda aleatoriamente a cor da sujeira para variar o visual
+            const hues = [30, 60, 90, 15]; // Tons de marrom, amarelo/verde escuro
+            const randomHue = hues[Math.floor(Math.random() * hues.length)];
+            dirtLayer.style.background = `radial-gradient(circle, hsla(${randomHue}, 60%, 25%, 0.85) 0%, hsla(${randomHue}, 40%, 15%, 0.85) 70%)`;
+        }
+    </script>
+</body>
+</html>
